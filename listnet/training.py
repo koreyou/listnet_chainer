@@ -132,7 +132,7 @@ def forward_pred(model, dataset, device=None):
 
 
 def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
-          tmp_dir='tmp.model', lr_decay=0.95):
+          tmp_dir='tmp.model', lr_decay=0.995):
     loss = 0.
     acc = 0.
     min_loss = float('inf')

@@ -10,9 +10,11 @@ import numpy as np
 class ListNet(chainer.Chain):
     def __init__(self, input_size, n_units, dropout):
         super(ListNet, self).__init__(
-            l1=L.Linear(input_size, n_units, initialW=I.GlorotNormal()),
-            l2=L.Linear(n_units, 1, initialW=I.GlorotNormal(),
-                        nobias=True))
+            l1=L.Linear(input_size, n_units, initialW=I.GlorotUniform()),
+            l2=L.Linear(n_units, n_units, initialW=I.GlorotUniform()),
+            l3=L.Linear(n_units, 1, initialW=I.GlorotUniform(),
+                        nobias=True)
+        )
         self.add_persistent("_dropout", dropout)
 
     def __call__(self, x, train=True):
@@ -21,10 +23,14 @@ class ListNet(chainer.Chain):
         x = F.reshape(x, (n_tokens, -1))
         if self._dropout > 0.:
             x = F.dropout(x, self._dropout, train=train)
-        o_1 = F.tanh(self.l1(x))
+        o_1 = F.relu(self.l1(x))
 
         if self._dropout > 0.:
             o_1 = F.dropout(o_1, self._dropout, train=train)
-        o_2 = self.l2(o_1)
+        o_2 = F.relu(self.l2(o_1))
 
-        return F.reshape(o_2, s[:-1])
+        if self._dropout > 0.:
+            o_2 = F.dropout(o_2, self._dropout, train=train)
+        o_3 = self.l3(o_2)
+
+        return F.reshape(o_3, s[:-1])

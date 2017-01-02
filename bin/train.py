@@ -20,13 +20,13 @@ def run(args):
     test = dataset.create_dataset(args.test)
     logging.info("loaded {} sets for test".format(len(test)))
 
-    listnet = ListNet(train[0][0].shape[1], 200, 0.2)
-    optimizer = chainer.optimizers.Adam(alpha=0.0001)
+    listnet = ListNet(train[0][0].shape[1], 200, 0.0)
+    optimizer = chainer.optimizers.Adam(alpha=0.0007)
     optimizer.setup(listnet)
-    optimizer.add_hook(chainer.optimizer.WeightDecay(0.00001))
-    optimizer.add_hook(chainer.optimizer.GradientClipping(5.))
+    optimizer.add_hook(chainer.optimizer.WeightDecay(0.0005))
+    #optimizer.add_hook(chainer.optimizer.GradientClipping(5.))
 
-    train_itr = chainer.iterators.SerialIterator(train, batch_size=4)
+    train_itr = chainer.iterators.SerialIterator(train, batch_size=1)
     training.train(listnet, optimizer, train_itr, 1000, dev=dev,
                    device=None)
     loss, acc = training.forward_pred(listnet, test, device=None)
