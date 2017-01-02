@@ -101,12 +101,12 @@ def forward_pred(model, dataset, device=None):
 
 
 def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
-          tmp_dir='tmp.model'):
+          tmp_dir='tmp.model', lr_decay=0.95):
     loss = 0.
     acc = 0.
     min_loss = float('inf')
     min_epoch = 0
-    report_tmpl = "[{:>3d}] T/loss={:0.6f} T/acc={:0.6f} D/loss={:0.6f} D/acc={:0.6f}"
+    report_tmpl = "[{:>3d}] T/loss={:0.6f} T/acc={:0.6f} D/loss={:0.6f} D/acc={:0.6f} lr={:0.6f}"
     for batch in train_itr:
         if train_itr.is_new_epoch:
             # this is not executed at first epoch
@@ -114,7 +114,7 @@ def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
             loss = loss / len(train_itr.dataset)
             acc = acc / len(train_itr.dataset)
             logging.info(report_tmpl.format(
-                train_itr.epoch - 1, loss, acc, loss_dev, acc_dev))
+                train_itr.epoch - 1, loss, acc, loss_dev, acc_dev, optimizer.alpha))
             if loss_dev < min_loss:
                 min_loss = loss_dev
                 min_epoch = train_itr.epoch - 1
@@ -122,10 +122,12 @@ def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
 
             loss = 0.
             acc = 0.
+            optimizer.alpha *= lr_decay
         if train_itr.epoch == n_epoch:
             break
         l, a, _ = _run_batch(model, optimizer, batch, device, True)
         loss += l * len(batch)
         acc += a * len(batch)
+
     logging.info('loading early stopped-model at epoch {}'.format(min_epoch))
     chainer.serializers.load_npz(tmp_dir, model)
