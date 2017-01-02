@@ -38,6 +38,29 @@ def mean_average_precision(probs, labels, length, th):
     return out / float(num_queries)
 
 
+def logsumexp(x, mask, zero_pad, axis):
+    x_exp = F.where(mask, F.exp(x), zero_pad)
+    return F.log(F.sum(x_exp, axis=axis))
+
+
+def logsoftmax_no_mask(x, mask, zero_pad, axis):
+    #x = x - F.broadcast_to(F.max(x, keepdims=True), x.shape)
+    x_logsumexp = logsumexp(x, mask, zero_pad, axis)
+
+    # log_p: (batch size, n)
+    return x - F.broadcast_to(F.expand_dims(x_logsumexp, 1), x.shape)
+
+
+def logsoftmax(x, mask, zero_pad, axis):
+    return F.where(mask, logsoftmax_no_mask(x, mask, zero_pad, axis), zero_pad)
+
+
+def softmax(x, mask, zero_pad, axis):
+    x_explogsoftmax = F.exp(logsoftmax_no_mask(x, mask, zero_pad, axis))
+    return F.where(mask, x_explogsoftmax, zero_pad)
+
+
+
 def permutation_probability_loss(x, t, length):
     """Calculate permutation probability distributions (k=1) and measure the
     cross entropy over the two distributions.
@@ -55,19 +78,19 @@ def permutation_probability_loss(x, t, length):
 
     """
     length = length.reshape(-1, 1)
-    # log_p: (batch size, n)
-    log_p_x = x - F.broadcast_to(F.expand_dims(F.logsumexp(x, axis=1), 1), x.shape)
-    # p_t: (batch size, n)
-    p_t = F.softmax(t)
-
-    # loss normalized over all instances
-    loss = p_t * log_p_x
     mask = np.tile(np.arange(x.shape[1]).reshape(1, -1), (x.shape[0],  1)) < length
     mask = chainer.Variable(mask)
     padding = chainer.Variable(np.zeros(x.shape, dtype=x.dtype))
-    loss = F.where(mask, loss, padding)
 
-    return -F.sum(loss / length) / p_t.shape[0]
+    # log_p: (batch size, n)
+    log_p_x = logsoftmax(x, mask, padding, axis=1)
+    # p_t: (batch size, n)
+    log_p_t = logsoftmax(t, mask, padding, axis=1)
+
+    # loss normalized over all instances
+    loss = F.exp(log_p_t) * log_p_t - F.exp(log_p_t) * log_p_x
+
+    return F.sum(loss) / float(x.shape[0])
 
 
 def clip_data(x, l):
