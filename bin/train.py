@@ -1,12 +1,10 @@
 import argparse
 import logging
-import cPickle
 
 import chainer
 
 from listnet import dataset, training
 from listnet.model import ListNet
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,7 +29,7 @@ def run(args):
     train_itr = chainer.iterators.SerialIterator(train, batch_size=4)
     training.train(listnet, optimizer, train_itr, 1000, dev=dev,
                    device=None)
-    loss, acc, _ = training.forward_pred(listnet, test, device=None)
+    loss, acc = training.forward_pred(listnet, test, device=None)
     logging.info("Test => loss={:0.6f} acc={:0.6f}".format(loss, acc))
 
 if __name__ == '__main__':

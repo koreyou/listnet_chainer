@@ -70,11 +70,17 @@ def permutation_probability_loss(x, t, length):
     return -F.sum(loss / length) / p_t.shape[0]
 
 
+def clip_data(x, l):
+    return x[:, :max(l)]
+
+
 def _run_batch(model, optimizer, batch, device, train):
     assert train == (optimizer is not None)
     model.cleargrads()
 
     x, t, l = chainer.dataset.concat_examples(batch, device=device)
+    x = clip_data(x, l)
+    t = clip_data(t, l)
 
     y = model(chainer.Variable(x), train=train)
     loss = permutation_probability_loss(y, chainer.Variable(t), l)
@@ -82,22 +88,19 @@ def _run_batch(model, optimizer, batch, device, train):
     if optimizer is not None:
         loss.backward()
         optimizer.update()
-    return float(loss.data), acc, y.data
+    return float(loss.data), acc
 
 
 def forward_pred(model, dataset, device=None):
     loss = 0.
     acc = 0.
-    pred = []
     iterator = chainer.iterators.SerialIterator(dataset, batch_size=4,
                                                 repeat=False, shuffle=False)
     for batch in iterator:
-        l, a, p = _run_batch(model, None, batch, device, False)
+        l, a = _run_batch(model, None, batch, device, False)
         loss += l * len(batch)
         acc += a * len(batch)
-        pred.append(p)
-    pred = np.concatenate(pred)
-    return loss / float(len(dataset)), acc / float(len(dataset)), pred
+    return loss / float(len(dataset)), acc / float(len(dataset))
 
 
 def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
@@ -110,7 +113,7 @@ def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
     for batch in train_itr:
         if train_itr.is_new_epoch:
             # this is not executed at first epoch
-            loss_dev, acc_dev, _ = forward_pred(model, dev, device=device)
+            loss_dev, acc_dev = forward_pred(model, dev, device=device)
             loss = loss / len(train_itr.dataset)
             acc = acc / len(train_itr.dataset)
             logging.info(report_tmpl.format(
@@ -125,7 +128,7 @@ def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
             optimizer.alpha *= lr_decay
         if train_itr.epoch == n_epoch:
             break
-        l, a, _ = _run_batch(model, optimizer, batch, device, True)
+        l, a = _run_batch(model, optimizer, batch, device, True)
         loss += l * len(batch)
         acc += a * len(batch)
 
