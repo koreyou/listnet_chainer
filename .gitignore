@@ -1,0 +1,29 @@
+###### Editor debris ########
+
+*.org
+*~
+¥#*
+
+# spyder
+.spyderproject/
+
+# pycharm
+**/.idea/
+
+# pyenv
+**/.python-version
+
+###### Python debris ########
+
+*.pyc
+
+
+###### Impl. specific debris ########
+
+*.log
+
+###### Work routines debris ########
+
+**/build/
+output/
+work/
