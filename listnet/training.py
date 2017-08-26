@@ -4,6 +4,8 @@ import chainer
 import chainer.functions as F
 import numpy as np
 
+from listnet.reporter import Reporter
+
 
 def mean_average_precision(probs, labels, length, th):
     """
@@ -138,6 +140,7 @@ def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
     min_loss = float('inf')
     min_epoch = 0
     report_tmpl = "[{:>3d}] T/loss={:0.6f} T/acc={:0.6f} D/loss={:0.6f} D/acc={:0.6f} lr={:0.6f}"
+    reporter = Reporter('log.json')
     for batch in train_itr:
         if train_itr.is_new_epoch:
             # this is not executed at first epoch
@@ -146,6 +149,11 @@ def train(model, optimizer, train_itr, n_epoch, dev=None, device=None,
             acc = acc / len(train_itr.dataset)
             logging.info(report_tmpl.format(
                 train_itr.epoch - 1, loss, acc, loss_dev, acc_dev, optimizer.alpha))
+            reporter.add_record('train', loss, train_itr.epoch - 1, 'loss')
+            reporter.add_record('train', acc, train_itr.epoch - 1 , 'accuracy')
+            reporter.add_record('dev', loss_dev, train_itr.epoch - 1, 'loss')
+            reporter.add_record('dev', acc_dev, train_itr.epoch - 1, 'accuracy')
+            reporter.save()
             if loss_dev < min_loss:
                 min_loss = loss_dev
                 min_epoch = train_itr.epoch - 1
