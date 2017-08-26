@@ -7,10 +7,15 @@ import numpy as np
 
 def mean_average_precision(probs, labels, length, th):
     """
+    Calculate mean average precision.
+    Label 1 and 2 are regarded "correct" as in the original evaluation
+    script https://onedrive.live.com/?authkey=%21ACnoZZSZVfHPJd0&cid=8FEADC23D838BDA8&id=8FEADC23D838BDA8%21122&parId=8FEADC23D838BDA8%21107&o=OneUp
+
     Args:
         probs (numpy.ndarray): list of lists of probability predictions.
             [[0.1, 0.8, 0.3, 0.1, 0.6, 0.6, 0.2], [0., ...]...]
         labels (numpy.ndarray): list of lists of ground-truth labels.
+            Each value must be 0, 1 or 2
         order (str): {'descending' or 'accending'}
 
     Return:
@@ -27,7 +32,7 @@ def mean_average_precision(probs, labels, length, th):
         precisions = []
         num_correct = 0.
         for i in xrange(min(th, len(candidates))):
-            if candidates[i] == 1:
+            if candidates[i] >= 1:
                 num_correct += 1
                 precisions.append(num_correct / (i + 1))
 
