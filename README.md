@@ -1,5 +1,5 @@
 
-# Decomposable attention model
+# Chainer Implementation of ListNet
 
 ## Introduction
 
