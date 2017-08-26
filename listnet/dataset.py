@@ -4,6 +4,10 @@ import numpy as np
 from chainer.datasets import TupleDataset
 
 
+class DatsetParseError(Exception):
+    pass
+
+
 def _parse_single(line):
     data = line.strip().split()[:48]
     rank = int(data[0])
@@ -13,11 +17,23 @@ def _parse_single(line):
 
 
 def create_dataset(path, size=-1):
+    """
+    Create dataset from MQ2007 data.
+
+    .. warning:: It will create dataset with label in range [0, 1, 2]
+        It should be no problem for Permutation Probability Loss
+        but do not plug in other loss function.
+    """
     data = collections.defaultdict(lambda: [[], []])
     with open(path, mode='r') as fin:
         # Data has one json per line
-        for line in fin:
+        for i, line in enumerate(fin):
             q, r, v = _parse_single(line)
+            if r not in {0, 1, 2}:
+                raise DatasetParseError(
+                    "L%d: Score must be 0, 1 or 2, but found %d" %
+                    (i, r)
+                )
             data[q][0].append(r)
             data[q][1].append(v)
     vectors = []
