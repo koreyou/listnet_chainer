@@ -25,6 +25,28 @@ Unrar data into "build" directory such that directory is organized `build/MQ2007
 python bin/train.py
 ```
 
+## Experiment
+
+I have run MQ2007 on [LETOR 4.0](http://research.microsoft.com/en-us/um/beijing/projects/letor/letor4dataset.aspx).
+I have only tested it on Fold 1.
+
+### Result
+
+Here is the performance metrics in mean average precision (MAP).
+
+```
+TRAIN: 0.4693
+DEV:   0.4767
+TEST:  0.4877
+```
+
+This is [the official result](https://1drv.ms/u/s!Aqi9ONgj3OqPgSS45WACJ5uKK-ok) on the same dataset.
+
+```
+TRAIN: 0.4526
+DEV:   0.4790
+TEST:  0.4884
+```
 
 ## Licence
 
