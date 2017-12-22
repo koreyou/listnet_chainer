@@ -48,6 +48,3 @@ DEV:   0.4790
 TEST:  0.4884
 ```
 
-## Licence
-
-This code is distributed under CC-BY.
