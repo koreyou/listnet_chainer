@@ -11,6 +11,9 @@ Code explanation is given at http://qiita.com/koreyou/items/a69750696fd0b9d88608
 
 ### Prerequisite
 
+This code only supports python 2. I have only tested this code on
+python 2.7.12 to be more specific.
+
 ```python
 pip install -r requirements.py
 export PYTHONPATH="`pwd`:$PYTHONPTH"
